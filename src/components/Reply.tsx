@@ -23,17 +23,31 @@ export default function Reply(
     }, [replyID, props.id]);
     return (
         <Fragment>
-            <div className="bg-white rounded-md flex p-5 gap-5 mt-4">
-                <div className="flex flex-col h-fit rounded-lg bg-very_light_gray">
-                    <button className="px-3 py-1 transition text-gray-400 hover:text-moderate_blue font-bold">
-                        +
-                    </button>
-                    <p className="text-moderate_blue font-rubik font-medium text-center py-1">
-                        {props.score}
-                    </p>
-                    <button className="px-3 py-1 transition text-gray-400 hover:text-moderate_blue font-bold">
-                        -
-                    </button>
+            <div className="bg-white rounded-md flex p-5 gap-5 mt-4 lg:flex-row flex-col-reverse">
+                <div className="flex lg:w-fit justify-between w-full">
+                    <div className="flex lg:flex-col h-fit rounded-lg bg-very_light_gray">
+                        <button className="px-3 py-1 transition text-gray-400 hover:text-moderate_blue font-bold">
+                            +
+                        </button>
+                        <p className="text-moderate_blue font-rubik font-medium text-center py-1">
+                            {props.score}
+                        </p>
+                        <button className="px-3 py-1 transition text-gray-400 hover:text-moderate_blue font-bold">
+                            -
+                        </button>
+                    </div>
+                    <button
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                setReplyID(props.id);
+                            }}
+                            className="flex lg:hidden items-center gap-2 transition hover:opacity-50"
+                        >
+                            <img src={IconReply} alt="replay icon" />
+                            <span className="text-moderate_blue font-semibold">
+                                Reply
+                            </span>
+                        </button>
                 </div>
                 <div className="flex-grow flex flex-col gap-3">
                     <div className="flex justify-between">
@@ -55,7 +69,7 @@ export default function Reply(
                                 e.preventDefault();
                                 setReplyID(props.id);
                             }}
-                            className="flex items-center gap-2 transition hover:opacity-50"
+                            className="lg:flex hidden items-center gap-2 transition hover:opacity-50"
                         >
                             <img src={IconReply} alt="replay icon" />
                             <span className="text-moderate_blue font-semibold">
