@@ -3,19 +3,91 @@ import type { Unpacked, data } from "../utils";
 import IconReply from "/images/icon-reply.svg";
 import IconDelete from "/images/icon-delete.svg";
 import IconEdit from "/images/icon-edit.svg";
-import { useAtom } from "jotai";
-import { replyIDAtom } from "../state";
+import { useAtom, useSetAtom } from "jotai";
+import { commentsAtom, replyIDAtom } from "../state";
 import Reply from "./Reply";
 import { useUser } from "./UserProvider";
 import Avatar from "./Avatar";
+import DeleteDialog from "./DeleteDialog";
 
 export default function Comment(props: Unpacked<typeof data.comments>) {
     const [replyID, setReplyID] = useAtom(replyIDAtom);
-    const [replayText, setReplyText] = useState(
-        "@" + props.user.username + " "
-    );
+    const [replyText, setReplyText] = useState("@" + props.user.username + " ");
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
     const { avatar, username } = useUser();
+    const [open, setOpen] = useState(false);
+    const setComments = useSetAtom(commentsAtom);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingText, setEditingText] = useState(
+        props.content
+    );
+
+    function addReply() {
+        const atPerson = `@${props.user.username}`;
+        const regex = new RegExp("^" + atPerson);
+        if (!replyText || !username) return;
+        let finalContent = "";
+        if (regex.test(replyText)) {
+            const { length } = atPerson;
+            finalContent = replyText.substring(length);
+        } else {
+            finalContent = replyText;
+        }
+        setComments((prev) => {
+            prev = prev.map((comment) => {
+                if (comment.id === props.id) {
+                    comment.replies = [
+                        ...comment.replies,
+                        {
+                            id: Math.random(),
+                            content: finalContent,
+                            createdAt: new Date().toDateString(),
+                            score: 0,
+                            replyingTo: props.user.username,
+                            user: {
+                                username,
+                            },
+                        },
+                    ];
+                }
+                return { ...comment };
+            });
+            return [...prev];
+        });
+        setReplyID(null);
+        setReplyText("@" + props.user.username + " ");
+    }
+
+    function updateComment() {
+        const atPerson = `@${props.user.username}`;
+        const regex = new RegExp("^" + atPerson);
+        if (!editingText || !username || !isEditing) return;
+        let finalContent = "";
+        if (regex.test(editingText)) {
+            const { length } = atPerson;
+            finalContent = editingText.substring(length);
+        } else {
+            finalContent = editingText;
+        }
+        setComments((prev) => {
+            prev = prev.map((comment) => {
+                if (comment.id === props.id) {
+                    comment.replies = comment.replies.map(reply => {
+                        if (reply.id === props.id) {
+                            reply.content = finalContent
+                        }
+                        return {...reply}
+                    })
+                    if (comment.id === props.id) {
+                        comment.content = finalContent
+                    }
+                }
+                return { ...comment };
+            });
+            return [...prev];
+        });
+        setIsEditing(false)
+    }
 
     useEffect(() => {
         if (replyID === props.id && textAreaRef.current) {
@@ -25,8 +97,15 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
                     textAreaRef.current.value.length;
         }
     }, [replyID, props.id]);
+
+    useEffect(()=>{
+        if (!isEditing) {
+            setEditingText(props.content)
+        }
+    },[isEditing, props.content, props.user.username])
     return (
         <Fragment>
+            <DeleteDialog open={open} setOpen={setOpen} id={props.id} />
             <div className="bg-white rounded-md flex p-5 gap-5 mt-4 lg:flex-row flex-col-reverse">
                 <div className="lg:w-fit w-full flex justify-between">
                     <div className="flex lg:flex-col flex-row w-fit h-fit items-center rounded-lg bg-very_light_gray">
@@ -43,13 +122,16 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
                     <div className="lg:hidden flex items-center gap-4">
                         {username === props.user.username ? (
                             <Fragment>
-                                <button className="flex items-center gap-2 transition hover:opacity-50">
+                                <button
+                                    onMouseDown={() => setOpen(true)}
+                                    className="flex items-center gap-2 transition hover:opacity-50"
+                                >
                                     <img src={IconDelete} alt="delete icon" />
                                     <span className="font-semibold text-soft_red">
                                         Delete
                                     </span>
                                 </button>
-                                <button className="flex items-center gap-2 transition hover:opacity-50">
+                                <button onMouseDown={()=>setIsEditing(!isEditing)} className="flex items-center gap-2 transition hover:opacity-50">
                                     <img src={IconEdit} alt="edit icon" />
                                     <span className="text-moderate_blue font-semibold">
                                         Edit
@@ -99,7 +181,10 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
                         <div className="lg:flex items-center justify-end gap-4 hidden">
                             {username === props.user.username ? (
                                 <Fragment>
-                                    <button className="flex items-center gap-2 transition hover:opacity-50">
+                                    <button
+                                        onMouseDown={() => setOpen(true)}
+                                        className="flex items-center gap-2 transition hover:opacity-50"
+                                    >
                                         <img
                                             src={IconDelete}
                                             alt="delete icon"
@@ -108,7 +193,7 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
                                             Delete
                                         </span>
                                     </button>
-                                    <button className="flex items-center gap-2 transition hover:opacity-50">
+                                    <button onMouseDown={()=>setIsEditing(!isEditing)} className="flex items-center gap-2 transition hover:opacity-50">
                                         <img src={IconEdit} alt="edit icon" />
                                         <span className="text-moderate_blue font-semibold">
                                             Edit
@@ -134,9 +219,24 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
                             )}
                         </div>
                     </div>
-                    <p className="font-rubik text-grayish_blue">
-                        {props.content}
-                    </p>
+                    {!isEditing ? (
+                        <p className="font-rubik text-grayish_blue">
+                            {props.content}
+                        </p>
+                    ) : (
+                        <Fragment>
+                            <textarea
+                                value={editingText}
+                                onChange={(e) => setEditingText(e.target.value)}
+                                className="rounded-lg resize-none outline-2 font-rubik ring-[1px] ring-light_gray outline-moderate_blue flex-grow px-4 py-2 min-h-24"
+                            />
+                            <div className="flex justify-end">
+                                <button onMouseDown={updateComment} className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit">
+                                    UPDATE
+                                </button>
+                            </div>
+                        </Fragment>
+                    )}
                 </div>
             </div>
             <div
@@ -149,9 +249,12 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
                     ref={textAreaRef}
                     className="rounded-lg resize-none outline-2 font-rubik ring-[1px] ring-light_gray outline-moderate_blue flex-grow px-4 py-2"
                     onChange={(e) => setReplyText(e.target.value)}
-                    value={`${replayText}`}
+                    value={`${replyText}`}
                 />
-                <button className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit">
+                <button
+                    onMouseDown={addReply}
+                    className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit"
+                >
                     REPLY
                 </button>
             </div>
@@ -165,7 +268,7 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
                     placeholder="Add a comment..."
                     className="rounded-lg resize-none outline-2 ring-[1px] ring-light_gray outline-moderate_blue font-rubik flex-grow px-4 py-2"
                     onChange={(e) => setReplyText(e.target.value)}
-                    value={`${replayText}`}
+                    value={`${replyText}`}
                 />
                 <div className="flex w-full justify-between">
                     <Avatar
@@ -174,17 +277,24 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
                         size={40}
                     />
 
-                    <button className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit">
-                        SEND
+                    <button
+                        onMouseDown={addReply}
+                        className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit"
+                    >
+                        REPLY
                     </button>
                 </div>
             </div>
             {props.replies.length !== 0 && (
                 <div className="flex lg:gap-8 gap-6">
                     <div className="lg:px-[1.15rem] border-r-[1px] border-light_grayish_blue mt-4"></div>
-                    <div className="flex flex-col">
+                    <div className="flex flex-col flex-grow">
                         {props.replies.map((item) => (
-                            <Reply {...item} key={item.id} />
+                            <Reply
+                                {...item}
+                                key={item.id}
+                                commentID={props.id}
+                            />
                         ))}
                     </div>
                 </div>

@@ -2,21 +2,95 @@ import IconReply from "/images/icon-reply.svg";
 import IconDelete from "/images/icon-delete.svg";
 import IconEdit from "/images/icon-edit.svg";
 import type { Unpacked, data } from "../utils";
-import { useAtom } from "jotai";
-import { replyIDAtom } from "../state";
+import { useAtom, useSetAtom } from "jotai";
+import { commentsAtom, replyIDAtom } from "../state";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useUser } from "./UserProvider";
 import Avatar from "./Avatar";
+import DeleteDialog from "./DeleteDialog";
 
 export default function Reply(
-    props: Unpacked<(typeof data.comments)[0]["replies"]>
+    props: Unpacked<(typeof data.comments)[0]["replies"]> & {
+        commentID: number;
+    }
 ) {
     const [replyID, setReplyID] = useAtom(replyIDAtom);
-    const [replayText, setReplyText] = useState(
-        "@" + props.user.username + " "
-    );
+    const [replyText, setReplyText] = useState("@" + props.user.username + " ");
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
     const { avatar, username } = useUser();
+    const [open, setOpen] = useState(false);
+    const setComments = useSetAtom(commentsAtom);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingText, setEditingText] = useState(
+        props.content
+    );
+
+    function addReply() {
+        const atPerson = `@${props.user.username}`;
+        const regex = new RegExp("^" + atPerson);
+        if (!replyText || !username) return;
+        let finalContent = "";
+        if (regex.test(replyText)) {
+            const { length } = atPerson;
+            finalContent = replyText.substring(length);
+        } else {
+            finalContent = replyText;
+        }
+        setComments((prev) => {
+            prev = prev.map((comment) => {
+                if (comment.id === props.commentID) {
+                    comment.replies = [
+                        ...comment.replies,
+                        {
+                            id: Math.random(),
+                            content: finalContent,
+                            createdAt: new Date().toDateString(),
+                            score: 0,
+                            replyingTo: props.user.username,
+                            user: {
+                                username,
+                            },
+                        },
+                    ];
+                }
+                return { ...comment };
+            });
+            return [...prev];
+        });
+        setReplyID(null);
+        setReplyText("@" + props.user.username + " ");
+    }
+
+    function updateComment() {
+        const atPerson = `@${props.user.username}`;
+        const regex = new RegExp("^" + atPerson);
+        if (!editingText || !username || !isEditing) return;
+        let finalContent = "";
+        if (regex.test(editingText)) {
+            const { length } = atPerson;
+            finalContent = editingText.substring(length);
+        } else {
+            finalContent = editingText;
+        }
+        setComments((prev) => {
+            prev = prev.map((comment) => {
+                if (comment.id === props.commentID) {
+                    comment.replies = comment.replies.map(reply => {
+                        if (reply.id === props.id) {
+                            reply.content = finalContent
+                        }
+                        return {...reply}
+                    })
+                    if (comment.id === props.id) {
+                        comment.content = finalContent
+                    }
+                }
+                return { ...comment };
+            });
+            return [...prev];
+        });
+        setIsEditing(false)
+    }
 
     useEffect(() => {
         if (replyID === props.id && textAreaRef.current) {
@@ -28,6 +102,7 @@ export default function Reply(
     }, [replyID, props.id]);
     return (
         <Fragment>
+            <DeleteDialog open={open} setOpen={setOpen} id={props.id} />
             <div className="bg-white rounded-md flex p-5 gap-5 mt-4 lg:flex-row flex-col-reverse">
                 <div className="flex lg:w-fit justify-between w-full">
                     <div className="flex lg:flex-col h-fit rounded-lg bg-very_light_gray">
@@ -44,13 +119,16 @@ export default function Reply(
                     <div className="lg:hidden flex items-center gap-4">
                         {username === props.user.username ? (
                             <Fragment>
-                                <button className="flex items-center gap-2 transition hover:opacity-50">
+                                <button
+                                    onMouseDown={() => setOpen(true)}
+                                    className="flex items-center gap-2 transition hover:opacity-50"
+                                >
                                     <img src={IconDelete} alt="delete icon" />
                                     <span className="font-semibold text-soft_red">
                                         Delete
                                     </span>
                                 </button>
-                                <button className="flex items-center gap-2 transition hover:opacity-50">
+                                <button onMouseDown={()=>setIsEditing(!isEditing)} className="flex items-center gap-2 transition hover:opacity-50">
                                     <img src={IconEdit} alt="edit icon" />
                                     <span className="text-moderate_blue font-semibold">
                                         Edit
@@ -97,46 +175,68 @@ export default function Reply(
                             </span>
                         </div>
                         <div className="hidden lg:flex items-center justify-end gap-4">
-                        {username === props.user.username ? (
-                            <Fragment>
-                                <button className="flex items-center gap-2 transition hover:opacity-50">
-                                    <img src={IconDelete} alt="delete icon" />
-                                    <span className="font-semibold text-soft_red">
-                                        Delete
-                                    </span>
-                                </button>
-                                <button className="flex items-center gap-2 transition hover:opacity-50">
-                                    <img src={IconEdit} alt="edit icon" />
+                            {username === props.user.username ? (
+                                <Fragment>
+                                    <button
+                                        onMouseDown={() => setOpen(true)}
+                                        className="flex items-center gap-2 transition hover:opacity-50"
+                                    >
+                                        <img
+                                            src={IconDelete}
+                                            alt="delete icon"
+                                        />
+                                        <span className="font-semibold text-soft_red">
+                                            Delete
+                                        </span>
+                                    </button>
+                                    <button onMouseDown={()=>setIsEditing(!isEditing)} className="flex items-center gap-2 transition hover:opacity-50">
+                                        <img src={IconEdit} alt="edit icon" />
+                                        <span className="text-moderate_blue font-semibold">
+                                            Edit
+                                        </span>
+                                    </button>
+                                </Fragment>
+                            ) : (
+                                <button
+                                    onMouseDown={(e) => {
+                                        if (!username) {
+                                            return;
+                                        }
+                                        e.preventDefault();
+                                        setReplyID(props.id);
+                                    }}
+                                    className="flex items-center gap-2 transition hover:opacity-50"
+                                >
+                                    <img src={IconReply} alt="replay icon" />
                                     <span className="text-moderate_blue font-semibold">
-                                        Edit
+                                        Reply
                                     </span>
                                 </button>
-                            </Fragment>
-                        ) : (
-                            <button
-                                onMouseDown={(e) => {
-                                    if (!username) {
-                                        return;
-                                    }
-                                    e.preventDefault();
-                                    setReplyID(props.id);
-                                }}
-                                className="flex items-center gap-2 transition hover:opacity-50"
-                            >
-                                <img src={IconReply} alt="replay icon" />
-                                <span className="text-moderate_blue font-semibold">
-                                    Reply
-                                </span>
-                            </button>
-                        )}
+                            )}
+                        </div>
                     </div>
-                    </div>
-                    <p className="font-rubik text-grayish_blue">
-                        <span className="font-rubik font-semibold text-moderate_blue">
+                    
+                    {!isEditing ? (
+                        <p className="font-rubik text-grayish_blue">
+                            <span className="font-rubik font-semibold text-moderate_blue">
                             {"@" + props.replyingTo + " "}
                         </span>
-                        {props.content}
-                    </p>
+                            {props.content}
+                        </p>
+                    ) : (
+                        <Fragment>
+                            <textarea
+                                value={editingText}
+                                onChange={(e) => setEditingText(e.target.value)}
+                                className="rounded-lg resize-none outline-2 font-rubik ring-[1px] ring-light_gray outline-moderate_blue flex-grow px-4 py-2 min-h-24"
+                            />
+                            <div className="flex justify-end">
+                                <button onMouseDown={updateComment} className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit">
+                                    UPDATE
+                                </button>
+                            </div>
+                        </Fragment>
+                    )}
                 </div>
             </div>
             <div
@@ -149,9 +249,12 @@ export default function Reply(
                     ref={textAreaRef}
                     className="rounded-lg resize-none outline-2 font-rubik ring-[1px] ring-light_gray outline-moderate_blue flex-grow px-4 py-2"
                     onChange={(e) => setReplyText(e.target.value)}
-                    value={`${replayText}`}
+                    value={`${replyText}`}
                 />
-                <button className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit">
+                <button
+                    onMouseDown={addReply}
+                    className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit"
+                >
                     REPLY
                 </button>
             </div>
@@ -165,7 +268,7 @@ export default function Reply(
                     placeholder="Add a comment..."
                     className="rounded-lg resize-none outline-2 ring-[1px] ring-light_gray outline-moderate_blue font-rubik flex-grow px-4 py-2"
                     onChange={(e) => setReplyText(e.target.value)}
-                    value={`${replayText}`}
+                    value={`${replyText}`}
                 />
                 <div className="flex w-full justify-between">
                     <Avatar
@@ -174,8 +277,11 @@ export default function Reply(
                         size={40}
                     />
 
-                    <button className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit">
-                        SEND
+                    <button
+                        onMouseDown={addReply}
+                        className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit"
+                    >
+                        REPLY
                     </button>
                 </div>
             </div>
