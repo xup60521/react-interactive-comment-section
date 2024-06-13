@@ -46,8 +46,8 @@ export default function LoginDialog() {
             onOpenChange={(e) => setOpenLoginDialog(e)}
         >
             <DialogContent>
-                <DialogHeader>Login</DialogHeader>
-                <div className="flex flex-col gap-2">
+                <DialogHeader className="font-semibold font-rubik">Login</DialogHeader>
+                <div className="flex flex-col gap-4">
                     <div className="grid grid-cols-4 items-center">
                         <Label htmlFor="username-login-input">Username</Label>
                         <Input

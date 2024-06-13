@@ -40,6 +40,9 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
                     </div>
                     <button
                         onMouseDown={(e) => {
+                            if (!username) {
+                                return;
+                            }
                             e.preventDefault();
                             setReplyID(props.id);
                         }}
@@ -68,6 +71,9 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
                         </div>
                         <button
                             onMouseDown={(e) => {
+                                if (!username) {
+                                    return;
+                                }
                                 e.preventDefault();
                                 setReplyID(props.id);
                             }}

@@ -41,6 +41,9 @@ export default function Reply(
                     </div>
                     <button
                         onMouseDown={(e) => {
+                            if (!username) {
+                                return;
+                            }
                             e.preventDefault();
                             setReplyID(props.id);
                         }}
@@ -55,12 +58,11 @@ export default function Reply(
                 <div className="flex-grow flex flex-col gap-3">
                     <div className="flex justify-between">
                         <div className="flex items-center gap-4">
-                            {/* <img
-                                src={props.user.image.png}
-                                alt={`${props.user.username} avatar`}
-                                className="size-8"
-                            /> */}
-                            <Avatar username={props.user.username} avatar={props.user.image.png} size={32} />
+                            <Avatar
+                                username={props.user.username}
+                                avatar={props.user.image.png}
+                                size={32}
+                            />
                             <span className="font-rubik text-dark_blue font-semibold">
                                 {props.user.username}
                             </span>
@@ -70,6 +72,9 @@ export default function Reply(
                         </div>
                         <button
                             onMouseDown={(e) => {
+                                if (!username) {
+                                    return;
+                                }
                                 e.preventDefault();
                                 setReplyID(props.id);
                             }}
@@ -82,6 +87,9 @@ export default function Reply(
                         </button>
                     </div>
                     <p className="font-rubik text-grayish_blue">
+                        <span className="font-rubik font-semibold text-moderate_blue">
+                            {"@" + props.replyingTo + " "}
+                        </span>
                         {props.content}
                     </p>
                 </div>
