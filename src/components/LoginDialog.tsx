@@ -1,4 +1,4 @@
-import { data } from "@/utils";
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { useOpenLogin, useSetOpenLogin, useSetUser } from "./UserProvider";
@@ -8,34 +8,25 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function LoginDialog() {
-    const [username, setUsername] = useState(data.currentUser.username);
+    const [username, setUsername] = useState("juliusomo");
     const openLoginDialog = useOpenLogin();
     const setOpenLoginDialog = useSetOpenLogin();
     const setUser = useSetUser();
     const { toast } = useToast();
     function handleLogin() {
         if (!username) {
-            toast({title: "Please input username", className: "bg-red-700 text-white border-none"})
+            toast({
+                title: "Please input username",
+                className: "bg-red-700 text-white border-none",
+            });
             return;
         }
-        if (username === data.currentUser.username) {
-            const {
-                currentUser: {
-                    image: { png },
-                },
-            } = data;
-            setUser((prev) => {
-                prev.username = username;
-                prev.avatar = png;
-                return { ...prev };
-            });
-        } else {
-            setUser((prev) => {
-                prev.username = username;
-                prev.avatar = null;
-                return { ...prev };
-            });
-        }
+
+        setUser((prev) => {
+            prev.username = username;
+            prev.avatar = null;
+            return { ...prev };
+        });
 
         setOpenLoginDialog(false);
     }
@@ -46,7 +37,9 @@ export default function LoginDialog() {
             onOpenChange={(e) => setOpenLoginDialog(e)}
         >
             <DialogContent>
-                <DialogHeader className="font-semibold font-rubik">Login</DialogHeader>
+                <DialogHeader className="font-semibold font-rubik">
+                    Login
+                </DialogHeader>
                 <div className="flex flex-col gap-4">
                     <div className="grid grid-cols-4 items-center">
                         <Label htmlFor="username-login-input">Username</Label>

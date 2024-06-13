@@ -1,5 +1,5 @@
 import Comment from "./components/Comment";
-import { useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import { commentsAtom } from "./state";
 import { Fragment, useRef, useState } from "react";
 import { useSetOpenLogin, useUser } from "./components/UserProvider";
@@ -9,8 +9,31 @@ export default function App() {
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
     const [replayText, setReplyText] = useState("");
     const { username, avatar } = useUser();
-    const comments = useAtomValue(commentsAtom);
+    const [comments, setComments] = useAtom(commentsAtom);
     const setOpenLoginDialog = useSetOpenLogin();
+    function handlePost() {
+        if (!replayText || !username) {
+            return;
+        }
+        setComments((prev) => {
+            prev = [
+                ...prev,
+                {
+                    id: Math.random(),
+                    content: replayText,
+                    createdAt: new Date().toDateString(),
+                    score: 0,
+                    user: {
+                        image: null,
+                        username,
+                    },
+                    replies: [],
+                },
+            ];
+            return [...prev];
+        });
+        setReplyText("");
+    }
 
     return (
         <main className="w-full min-h-screen bg-very_light_gray flex flex-col items-center">
@@ -35,7 +58,10 @@ export default function App() {
                                 onChange={(e) => setReplyText(e.target.value)}
                                 value={`${replayText}`}
                             />
-                            <button className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit">
+                            <button
+                                onMouseDown={handlePost}
+                                className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit"
+                            >
                                 SEND
                             </button>
                         </div>
@@ -56,7 +82,10 @@ export default function App() {
                                     size={40}
                                 />
 
-                                <button className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit">
+                                <button
+                                    onMouseDown={handlePost}
+                                    className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit"
+                                >
                                     SEND
                                 </button>
                             </div>

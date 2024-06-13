@@ -1,6 +1,8 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import type { Unpacked, data } from "../utils";
 import IconReply from "/images/icon-reply.svg";
+import IconDelete from "/images/icon-delete.svg";
+import IconEdit from "/images/icon-edit.svg";
 import { useAtom } from "jotai";
 import { replyIDAtom } from "../state";
 import Reply from "./Reply";
@@ -38,52 +40,99 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
                             -
                         </button>
                     </div>
-                    <button
-                        onMouseDown={(e) => {
-                            if (!username) {
-                                return;
-                            }
-                            e.preventDefault();
-                            setReplyID(props.id);
-                        }}
-                        className="flex lg:hidden items-center gap-2 transition hover:opacity-50"
-                    >
-                        <img src={IconReply} alt="replay icon" />
-                        <span className="text-moderate_blue font-semibold">
-                            Reply
-                        </span>
-                    </button>
+                    <div className="lg:hidden flex items-center gap-4">
+                        {username === props.user.username ? (
+                            <Fragment>
+                                <button className="flex items-center gap-2 transition hover:opacity-50">
+                                    <img src={IconDelete} alt="delete icon" />
+                                    <span className="font-semibold text-soft_red">
+                                        Delete
+                                    </span>
+                                </button>
+                                <button className="flex items-center gap-2 transition hover:opacity-50">
+                                    <img src={IconEdit} alt="edit icon" />
+                                    <span className="text-moderate_blue font-semibold">
+                                        Edit
+                                    </span>
+                                </button>
+                            </Fragment>
+                        ) : (
+                            <button
+                                onMouseDown={(e) => {
+                                    if (!username) {
+                                        return;
+                                    }
+                                    e.preventDefault();
+                                    setReplyID(props.id);
+                                }}
+                                className="flex items-center gap-2 transition hover:opacity-50"
+                            >
+                                <img src={IconReply} alt="replay icon" />
+                                <span className="text-moderate_blue font-semibold">
+                                    Reply
+                                </span>
+                            </button>
+                        )}
+                    </div>
                 </div>
                 <div className="flex-grow flex flex-col gap-3">
                     <div className="flex justify-between">
                         <div className="flex items-center gap-4">
-                            <img
-                                src={props.user.image.png}
-                                alt={`${props.user.username} avatar`}
-                                className="size-8"
+                            <Avatar
+                                username={props.user.username}
+                                avatar={props.user.image?.png}
+                                size={32}
                             />
-                            <span className="font-rubik text-dark_blue font-semibold">
+                            <span className="font-rubik text-dark_blue font-semibold flex items-center">
                                 {props.user.username}
+                                {props.user.username === username && (
+                                    <p className="text-xs bg-moderate_blue rounded-sm text-white ml-2 font-rubik px-[5px] pt-[1px] pb-[3px] w-fit h-fit">
+                                        you
+                                    </p>
+                                )}
                             </span>
                             <span className="font-rubik text-grayish_blue">
                                 {props.createdAt}
                             </span>
                         </div>
-                        <button
-                            onMouseDown={(e) => {
-                                if (!username) {
-                                    return;
-                                }
-                                e.preventDefault();
-                                setReplyID(props.id);
-                            }}
-                            className="lg:flex hidden items-center gap-2 transition hover:opacity-50"
-                        >
-                            <img src={IconReply} alt="replay icon" />
-                            <span className="text-moderate_blue font-semibold">
-                                Reply
-                            </span>
-                        </button>
+
+                        <div className="lg:flex items-center justify-end gap-4 hidden">
+                            {username === props.user.username ? (
+                                <Fragment>
+                                    <button className="flex items-center gap-2 transition hover:opacity-50">
+                                        <img
+                                            src={IconDelete}
+                                            alt="delete icon"
+                                        />
+                                        <span className="font-semibold text-soft_red">
+                                            Delete
+                                        </span>
+                                    </button>
+                                    <button className="flex items-center gap-2 transition hover:opacity-50">
+                                        <img src={IconEdit} alt="edit icon" />
+                                        <span className="text-moderate_blue font-semibold">
+                                            Edit
+                                        </span>
+                                    </button>
+                                </Fragment>
+                            ) : (
+                                <button
+                                    onMouseDown={(e) => {
+                                        if (!username) {
+                                            return;
+                                        }
+                                        e.preventDefault();
+                                        setReplyID(props.id);
+                                    }}
+                                    className="flex items-center gap-2 transition hover:opacity-50"
+                                >
+                                    <img src={IconReply} alt="replay icon" />
+                                    <span className="text-moderate_blue font-semibold">
+                                        Reply
+                                    </span>
+                                </button>
+                            )}
+                        </div>
                     </div>
                     <p className="font-rubik text-grayish_blue">
                         {props.content}

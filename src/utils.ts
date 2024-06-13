@@ -1,13 +1,6 @@
 export const base = `/react-interactive-comment-section`
 
 export const data = {
-    currentUser: {
-        image: {
-            png: `${base}/images/avatars/image-juliusomo.png`,
-            webp: `${base}/images/avatars/image-juliusomo.webp`,
-        },
-        username: `juliusomo`,
-    },
     comments: [
         {
             id: 1,
@@ -71,7 +64,34 @@ export const data = {
                 },
             ],
         },
-    ],
+    ] as Comment[],
 };
 
+type Comment = {
+    id: number;
+    content: string;
+    createdAt: string;
+    score: number;
+    user: {
+        image: {
+            png: string;
+            webp: string;
+        } | null;
+        username: string;
+    };
+    replies: {
+        id: number;
+        content: string;
+        createdAt: string;
+        score: number;
+        replyingTo: string;
+        user: {
+            image?: {
+                png: string;
+                webp: string;
+            };
+            username: string;
+        };
+    }[]
+}
 export type Unpacked<T> = T extends (infer U)[] ? U : T
