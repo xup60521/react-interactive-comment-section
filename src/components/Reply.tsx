@@ -1,8 +1,9 @@
 import IconReply from "/images/icon-reply.svg";
-import { type Unpacked, data } from "../utils";
+import type { Unpacked, data } from "../utils";
 import { useAtom } from "jotai";
 import { replyIDAtom } from "../state";
 import { Fragment, useEffect, useRef, useState } from "react";
+import { useUser } from "./UserProvider";
 
 export default function Reply(
     props: Unpacked<(typeof data.comments)[0]["replies"]>
@@ -12,6 +13,7 @@ export default function Reply(
         "@" + props.user.username + " "
     );
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
+    const { avatar } = useUser();
 
     useEffect(() => {
         if (replyID === props.id && textAreaRef.current) {
@@ -37,17 +39,17 @@ export default function Reply(
                         </button>
                     </div>
                     <button
-                            onMouseDown={(e) => {
-                                e.preventDefault();
-                                setReplyID(props.id);
-                            }}
-                            className="flex lg:hidden items-center gap-2 transition hover:opacity-50"
-                        >
-                            <img src={IconReply} alt="replay icon" />
-                            <span className="text-moderate_blue font-semibold">
-                                Reply
-                            </span>
-                        </button>
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            setReplyID(props.id);
+                        }}
+                        className="flex lg:hidden items-center gap-2 transition hover:opacity-50"
+                    >
+                        <img src={IconReply} alt="replay icon" />
+                        <span className="text-moderate_blue font-semibold">
+                            Reply
+                        </span>
+                    </button>
                 </div>
                 <div className="flex-grow flex flex-col gap-3">
                     <div className="flex justify-between">
@@ -88,7 +90,7 @@ export default function Reply(
                 }`}
             >
                 <img
-                    src={data.currentUser.image.png}
+                    src={avatar ?? ""}
                     alt="my avatar"
                     className="size-10"
                 />

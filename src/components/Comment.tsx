@@ -1,9 +1,10 @@
 import { Fragment, useEffect, useRef, useState } from "react";
-import { type Unpacked, data } from "../utils";
+import type { Unpacked, data } from "../utils";
 import IconReply from "/images/icon-reply.svg";
 import { useAtom } from "jotai";
 import { replyIDAtom } from "../state";
 import Reply from "./Reply";
+import { useUser } from "./UserProvider";
 
 export default function Comment(props: Unpacked<typeof data.comments>) {
     const [replyID, setReplyID] = useAtom(replyIDAtom);
@@ -11,6 +12,7 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
         "@" + props.user.username + " "
     );
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
+    const { avatar } = useUser();
 
     useEffect(() => {
         if (replyID === props.id && textAreaRef.current) {
@@ -36,17 +38,17 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
                         </button>
                     </div>
                     <button
-                            onMouseDown={(e) => {
-                                e.preventDefault();
-                                setReplyID(props.id);
-                            }}
-                            className="flex lg:hidden items-center gap-2 transition hover:opacity-50"
-                        >
-                            <img src={IconReply} alt="replay icon" />
-                            <span className="text-moderate_blue font-semibold">
-                                Reply
-                            </span>
-                        </button>
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            setReplyID(props.id);
+                        }}
+                        className="flex lg:hidden items-center gap-2 transition hover:opacity-50"
+                    >
+                        <img src={IconReply} alt="replay icon" />
+                        <span className="text-moderate_blue font-semibold">
+                            Reply
+                        </span>
+                    </button>
                 </div>
                 <div className="flex-grow flex flex-col gap-3">
                     <div className="flex justify-between">
@@ -86,11 +88,7 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
                     replyID === props.id ? "flex" : "hidden"
                 }`}
             >
-                <img
-                    src={data.currentUser.image.png}
-                    alt="my avatar"
-                    className="size-10"
-                />
+                <img src={avatar ?? ""} alt="my avatar" className="size-10" />
                 <textarea
                     ref={textAreaRef}
                     className="rounded-lg resize-none outline-2 font-rubik ring-[1px] ring-light_gray outline-moderate_blue flex-grow px-4 py-2"

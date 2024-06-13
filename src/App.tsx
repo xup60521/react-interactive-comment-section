@@ -3,10 +3,12 @@ import { useAtomValue } from "jotai";
 import { commentsAtom } from "./state";
 import { data } from "./utils";
 import { useRef, useState } from "react";
+import { useUser } from "./components/UserProvider";
 
 export default function App() {
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
     const [replayText, setReplyText] = useState("");
+    const {avatar} = useUser()
     const comments = useAtomValue(commentsAtom);
     return (
         <main className="w-full min-h-screen bg-very_light_gray flex flex-col items-center">
@@ -18,7 +20,7 @@ export default function App() {
                     className={`p-5 gap-4 rounded-md mt-4 bg-white min-h-32 relative lg:flex hidden`}
                 >
                     <img
-                        src={data.currentUser.image.png}
+                        src={avatar ?? ""}
                         alt="my avatar"
                         className="size-10"
                     />
