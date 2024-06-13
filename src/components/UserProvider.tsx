@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
-import { data } from "@/utils";
-import { createContext, useContext, useEffect, useState } from "react";
+
+import { createContext, useContext, useState } from "react";
 import { unknown } from "zod";
 const userContext = createContext({
     user: {
@@ -13,6 +13,10 @@ const userContext = createContext({
             avatar: null | string;
         }>
     >,
+    openLoginDialog: true,
+    setOpenLoginDialog: unknown as React.Dispatch<
+        React.SetStateAction<boolean>
+    >,
 });
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
@@ -20,25 +24,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         username: null as null | string,
         avatar: null as null | string,
     });
-
-    useEffect(() => {
-        const {
-            currentUser: {
-                username,
-                image: { png },
-            },
-        } = data;
-        setUser({
-            username,
-            avatar: png,
-        });
-    }, []);
+    const [openLoginDialog, setOpenLoginDialog] = useState(true);
 
     return (
         <userContext.Provider
             value={{
                 user,
                 setUser,
+                openLoginDialog,
+                setOpenLoginDialog,
             }}
         >
             {children}
@@ -48,3 +42,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
 export const useUser = () => useContext(userContext).user;
 export const useSetUser = () => useContext(userContext).setUser;
+
+export const useOpenLogin = () => useContext(userContext).openLoginDialog;
+export const useSetOpenLogin = () => useContext(userContext).setOpenLoginDialog;

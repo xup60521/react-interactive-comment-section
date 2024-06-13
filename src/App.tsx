@@ -1,28 +1,29 @@
 import Comment from "./components/Comment";
 import { useAtomValue } from "jotai";
 import { commentsAtom } from "./state";
-import { data } from "./utils";
 import { useRef, useState } from "react";
 import { useUser } from "./components/UserProvider";
+import Avatar from "./components/Avatar";
 
 export default function App() {
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
     const [replayText, setReplyText] = useState("");
-    const {avatar} = useUser()
+    const { username, avatar } = useUser();
     const comments = useAtomValue(commentsAtom);
+
     return (
         <main className="w-full min-h-screen bg-very_light_gray flex flex-col items-center">
-            <div className="flex flex-col lg:w-[50vw] w-full lg:px-0 lg:py-12 px-6 py-4">
+            <div className="flex flex-col lg:w-[50vw] w-[2/3] lg:px-0 lg:py-12 px-6 py-4">
                 {comments.map((item) => (
                     <Comment {...item} key={item.id} />
                 ))}
                 <div
                     className={`p-5 gap-4 rounded-md mt-4 bg-white min-h-32 relative lg:flex hidden`}
                 >
-                    <img
-                        src={avatar ?? ""}
-                        alt="my avatar"
-                        className="size-10"
+                    <Avatar
+                        username={username ?? ""}
+                        avatar={avatar}
+                        size={40}
                     />
                     <textarea
                         ref={textAreaRef}
@@ -46,10 +47,10 @@ export default function App() {
                         value={`${replayText}`}
                     />
                     <div className="flex w-full justify-between">
-                        <img
-                            src={data.currentUser.image.png}
-                            alt="my avatar"
-                            className="size-10"
+                        <Avatar
+                            username={username ?? ""}
+                            avatar={avatar}
+                            size={40}
                         />
 
                         <button className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit">

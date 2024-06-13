@@ -4,6 +4,7 @@ import { useAtom } from "jotai";
 import { replyIDAtom } from "../state";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useUser } from "./UserProvider";
+import Avatar from "./Avatar";
 
 export default function Reply(
     props: Unpacked<(typeof data.comments)[0]["replies"]>
@@ -13,7 +14,7 @@ export default function Reply(
         "@" + props.user.username + " "
     );
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
-    const { avatar } = useUser();
+    const { avatar, username } = useUser();
 
     useEffect(() => {
         if (replyID === props.id && textAreaRef.current) {
@@ -54,11 +55,12 @@ export default function Reply(
                 <div className="flex-grow flex flex-col gap-3">
                     <div className="flex justify-between">
                         <div className="flex items-center gap-4">
-                            <img
+                            {/* <img
                                 src={props.user.image.png}
                                 alt={`${props.user.username} avatar`}
                                 className="size-8"
-                            />
+                            /> */}
+                            <Avatar username={props.user.username} avatar={props.user.image.png} size={32} />
                             <span className="font-rubik text-dark_blue font-semibold">
                                 {props.user.username}
                             </span>
@@ -85,24 +87,44 @@ export default function Reply(
                 </div>
             </div>
             <div
-                className={`p-5 gap-4 rounded-md mt-2 bg-white min-h-32 relative ${
-                    replyID === props.id ? "flex" : "hidden"
+                className={`p-5 gap-4 rounded-md mt-2 bg-white min-h-32 hidden relative ${
+                    replyID === props.id ? "lg:flex" : "lg:hidden"
                 }`}
             >
-                <img
-                    src={avatar ?? ""}
-                    alt="my avatar"
-                    className="size-10"
-                />
+                <Avatar username={username ?? ""} avatar={avatar} size={40} />
                 <textarea
                     ref={textAreaRef}
-                    className="rounded-lg resize-none outline-2 ring-[1px] font-rubik ring-light_gray outline-moderate_blue flex-grow px-4 py-2"
+                    className="rounded-lg resize-none outline-2 font-rubik ring-[1px] ring-light_gray outline-moderate_blue flex-grow px-4 py-2"
                     onChange={(e) => setReplyText(e.target.value)}
                     value={`${replayText}`}
                 />
                 <button className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit">
                     REPLY
                 </button>
+            </div>
+            <div
+                className={`p-5 gap-4 rounded-md mt-4 mb-4 bg-white min-h-48 relative flex-col lg:hidden ${
+                    replyID === props.id ? "flex" : "hidden"
+                }`}
+            >
+                <textarea
+                    ref={textAreaRef}
+                    placeholder="Add a comment..."
+                    className="rounded-lg resize-none outline-2 ring-[1px] ring-light_gray outline-moderate_blue font-rubik flex-grow px-4 py-2"
+                    onChange={(e) => setReplyText(e.target.value)}
+                    value={`${replayText}`}
+                />
+                <div className="flex w-full justify-between">
+                    <Avatar
+                        username={username ?? ""}
+                        avatar={avatar}
+                        size={40}
+                    />
+
+                    <button className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit">
+                        SEND
+                    </button>
+                </div>
             </div>
         </Fragment>
     );
