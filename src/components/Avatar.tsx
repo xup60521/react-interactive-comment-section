@@ -1,5 +1,9 @@
 import { RandomAvatar } from "react-random-avatars";
 import { Fragment } from "react/jsx-runtime";
+import J from "/images/avatars/image-juliusomo.png";
+import A from "/images/avatars/image-amyrobson.png";
+import M from "/images/avatars/image-maxblagun.png";
+import R from "/images/avatars/image-ramsesmiron.png";
 
 export default function Avatar(props: {
     avatar?: string | null;
@@ -9,16 +13,16 @@ export default function Avatar(props: {
     const { username, size } = props;
     let { avatar } = props;
     if (username === "juliusomo") {
-        avatar = "/react-interactive-comment-section/images/avatars/image-juliusomo.png"
+        avatar = J;
     }
     if (username === "amyrobson") {
-        avatar = "/react-interactive-comment-section/images/avatars/image-amyrobson.png"
+        avatar = A;
     }
     if (username === "maxblagun") {
-        avatar = "/react-interactive-comment-section/images/avatars/image-maxblagun.png"
+        avatar = M;
     }
     if (username === "ramsesmiron") {
-        avatar = "/react-interactive-comment-section/images/avatars/image-ramsesmiron.png"
+        avatar = R;
     }
     return (
         <Fragment>
