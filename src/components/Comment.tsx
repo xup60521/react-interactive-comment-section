@@ -4,7 +4,7 @@ import IconReply from "/images/icon-reply.svg";
 import IconDelete from "/images/icon-delete.svg";
 import IconEdit from "/images/icon-edit.svg";
 import { useAtom, useSetAtom } from "jotai";
-import { commentsAtom, replyIDAtom } from "../state";
+import { commentsAtom, replyIDAtom, votesAtom } from "../state";
 import Reply from "./Reply";
 import { useUser } from "./UserProvider";
 import Avatar from "./Avatar";
@@ -18,9 +18,17 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
     const [open, setOpen] = useState(false);
     const setComments = useSetAtom(commentsAtom);
     const [isEditing, setIsEditing] = useState(false);
-    const [editingText, setEditingText] = useState(
-        props.content
-    );
+    const [editingText, setEditingText] = useState(props.content);
+    const [votes, setVotes] = useAtom(votesAtom);
+    const scoreOffset =
+        votes.filter((d) => d.commentID === props.id && d.voteType === "upvote")
+            .length -
+        votes.filter(
+            (d) => d.commentID === props.id && d.voteType === "downvote"
+        ).length;
+    const userVote = votes.find(
+        (d) => d.commentID === props.id && d.username === username
+    )?.voteType;
 
     function addReply() {
         const atPerson = `@${props.user.username}`;
@@ -72,21 +80,58 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
         setComments((prev) => {
             prev = prev.map((comment) => {
                 if (comment.id === props.id) {
-                    comment.replies = comment.replies.map(reply => {
+                    comment.replies = comment.replies.map((reply) => {
                         if (reply.id === props.id) {
-                            reply.content = finalContent
+                            reply.content = finalContent;
                         }
-                        return {...reply}
-                    })
+                        return { ...reply };
+                    });
                     if (comment.id === props.id) {
-                        comment.content = finalContent
+                        comment.content = finalContent;
                     }
                 }
                 return { ...comment };
             });
             return [...prev];
         });
-        setIsEditing(false)
+        setIsEditing(false);
+    }
+
+    function updateVote(c: "upvote" | "downvote") {
+        if (!username) {
+            return;
+        }
+        if (!userVote) {
+            setVotes((prev) => [
+                ...prev,
+                {
+                    voteID: Math.random(),
+                    username,
+                    commentID: props.id,
+                    voteType: c,
+                },
+            ]);
+            return;
+        }
+        if (userVote === c) {
+            setVotes((prev) => [
+                ...prev.filter(
+                    (d) =>
+                        !(d.commentID === props.id && d.username === username)
+                ),
+            ]);
+            return;
+        }
+        setVotes((prev) => {
+            const updated = prev.map((d) => {
+                if (d.commentID === props.id && d.username === username) {
+                    d.voteType = c;
+                }
+                return d;
+            });
+            return [...updated];
+        });
+        return;
     }
 
     useEffect(() => {
@@ -98,24 +143,36 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
         }
     }, [replyID, props.id]);
 
-    useEffect(()=>{
+    useEffect(() => {
         if (!isEditing) {
-            setEditingText(props.content)
+            setEditingText(props.content);
         }
-    },[isEditing, props.content, props.user.username])
+    }, [isEditing, props.content, props.user.username]);
     return (
         <Fragment>
             <DeleteDialog open={open} setOpen={setOpen} id={props.id} />
             <div className="bg-white rounded-md flex p-5 gap-5 mt-4 lg:flex-row flex-col-reverse">
                 <div className="lg:w-fit w-full flex justify-between">
                     <div className="flex lg:flex-col flex-row w-fit h-fit items-center rounded-lg bg-very_light_gray">
-                        <button className="px-3 py-1 transition text-gray-400 hover:text-moderate_blue font-bold">
+                        <button
+                            className={`px-3 py-1 transition text-gray-400 hover:text-moderate_blue font-bold ${
+                                userVote === "upvote" &&
+                                "text-moderate_blue scale-125"
+                            }`}
+                            onMouseDown={() => updateVote("upvote")}
+                        >
                             +
                         </button>
                         <p className="text-moderate_blue font-rubik font-medium text-center py-1">
-                            {props.score}
+                            {props.score + scoreOffset}
                         </p>
-                        <button className="px-3 py-1 transition text-gray-400 hover:text-moderate_blue font-bold">
+                        <button
+                            className={`px-3 py-1 transition text-gray-400 hover:text-moderate_blue font-bold ${
+                                userVote === "downvote" &&
+                                "text-moderate_blue scale-125"
+                            }`}
+                            onMouseDown={() => updateVote("downvote")}
+                        >
                             -
                         </button>
                     </div>
@@ -131,7 +188,10 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
                                         Delete
                                     </span>
                                 </button>
-                                <button onMouseDown={()=>setIsEditing(!isEditing)} className="flex items-center gap-2 transition hover:opacity-50">
+                                <button
+                                    onMouseDown={() => setIsEditing(!isEditing)}
+                                    className="flex items-center gap-2 transition hover:opacity-50"
+                                >
                                     <img src={IconEdit} alt="edit icon" />
                                     <span className="text-moderate_blue font-semibold">
                                         Edit
@@ -193,7 +253,12 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
                                             Delete
                                         </span>
                                     </button>
-                                    <button onMouseDown={()=>setIsEditing(!isEditing)} className="flex items-center gap-2 transition hover:opacity-50">
+                                    <button
+                                        onMouseDown={() =>
+                                            setIsEditing(!isEditing)
+                                        }
+                                        className="flex items-center gap-2 transition hover:opacity-50"
+                                    >
                                         <img src={IconEdit} alt="edit icon" />
                                         <span className="text-moderate_blue font-semibold">
                                             Edit
@@ -231,7 +296,10 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
                                 className="rounded-lg resize-none outline-2 font-rubik ring-[1px] ring-light_gray outline-moderate_blue flex-grow px-4 py-2 min-h-24"
                             />
                             <div className="flex justify-end">
-                                <button onMouseDown={updateComment} className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit">
+                                <button
+                                    onMouseDown={updateComment}
+                                    className="px-6 py-3 transition hover:opacity-70 rounded-lg bg-moderate_blue font-rubik text-white h-fit"
+                                >
                                     UPDATE
                                 </button>
                             </div>
