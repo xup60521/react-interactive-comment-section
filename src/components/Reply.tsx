@@ -3,11 +3,12 @@ import IconDelete from "/images/icon-delete.svg";
 import IconEdit from "/images/icon-edit.svg";
 import type { Unpacked, data } from "../utils";
 import { useAtom, useSetAtom } from "jotai";
-import { commentsAtom, replyIDAtom, votesAtom } from "../state";
+import { commentsAtom, replyIDAtom } from "../state";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useUser } from "./UserProvider";
 import Avatar from "./Avatar";
 import DeleteDialog from "./DeleteDialog";
+import { useVote } from "@/lib/hooks";
 
 export default function Reply(
     props: Unpacked<(typeof data.comments)[0]["replies"]> & {
@@ -22,18 +23,7 @@ export default function Reply(
     const setComments = useSetAtom(commentsAtom);
     const [isEditing, setIsEditing] = useState(false);
     const [editingText, setEditingText] = useState(props.content);
-    const [votes, setVotes] = useAtom(votesAtom);
-    const scoreOffset =
-        votes.filter(
-            (d) => d.commentID === props.id && d.voteType === "upvote"
-        ).length -
-        votes.filter(
-            (d) => d.commentID === props.id && d.voteType === "downvote"
-        ).length;
-    
-    const userVote = votes.find(
-        (d) => d.commentID === props.id && d.username === username
-    )?.voteType;
+    const { scoreOffset, userVote, updateVote } = useVote(props.id);
 
     function addReply() {
         const atPerson = `@${props.user.username}`;
@@ -102,41 +92,6 @@ export default function Reply(
         setIsEditing(false);
     }
 
-    function updateVote(c: "upvote" | "downvote") {
-        if (!username) {
-            return;
-        }
-        if (!userVote) {
-            setVotes((prev) => [
-                ...prev,
-                {
-                    voteID: Math.random(),
-                    username,
-                    commentID: props.id,
-                    voteType: c,
-                },
-            ]);
-            return;
-        }
-        if (userVote === c) {
-            setVotes(prev => [...prev.filter(d => !(d.commentID === props.id && d.username === username))])
-            return;
-        }
-        setVotes((prev) => {
-            const updated = prev.map((d) => {
-                if (
-                    d.commentID === props.id &&
-                    d.username === username
-                ) {
-                    d.voteType = c;
-                }
-                return d;
-            });
-            return [...updated];
-        });
-        return;
-    }
-
     useEffect(() => {
         if (replyID === props.id && textAreaRef.current) {
             textAreaRef.current.select();
@@ -152,7 +107,10 @@ export default function Reply(
                 <div className="flex lg:w-fit justify-between w-full">
                     <div className="flex lg:flex-col h-fit rounded-lg bg-very_light_gray">
                         <button
-                            className={`px-3 py-1 transition text-gray-400 hover:text-moderate_blue font-bold ${userVote === "upvote" && "text-moderate_blue scale-125"}`}
+                            className={`px-3 py-1 transition text-gray-400 hover:text-moderate_blue font-bold ${
+                                userVote === "upvote" &&
+                                "text-moderate_blue scale-125"
+                            }`}
                             onMouseDown={() => updateVote("upvote")}
                         >
                             +
@@ -161,7 +119,10 @@ export default function Reply(
                             {props.score + scoreOffset}
                         </p>
                         <button
-                            className={`px-3 py-1 transition text-gray-400 hover:text-moderate_blue font-bold ${userVote === "downvote" && "text-moderate_blue scale-125"}`}
+                            className={`px-3 py-1 transition text-gray-400 hover:text-moderate_blue font-bold ${
+                                userVote === "downvote" &&
+                                "text-moderate_blue scale-125"
+                            }`}
                             onMouseDown={() => updateVote("downvote")}
                         >
                             -

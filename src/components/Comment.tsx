@@ -4,11 +4,12 @@ import IconReply from "/images/icon-reply.svg";
 import IconDelete from "/images/icon-delete.svg";
 import IconEdit from "/images/icon-edit.svg";
 import { useAtom, useSetAtom } from "jotai";
-import { commentsAtom, replyIDAtom, votesAtom } from "../state";
+import { commentsAtom, replyIDAtom } from "../state";
 import Reply from "./Reply";
 import { useUser } from "./UserProvider";
 import Avatar from "./Avatar";
 import DeleteDialog from "./DeleteDialog";
+import { useVote } from "@/lib/hooks";
 
 export default function Comment(props: Unpacked<typeof data.comments>) {
     const [replyID, setReplyID] = useAtom(replyIDAtom);
@@ -19,16 +20,7 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
     const setComments = useSetAtom(commentsAtom);
     const [isEditing, setIsEditing] = useState(false);
     const [editingText, setEditingText] = useState(props.content);
-    const [votes, setVotes] = useAtom(votesAtom);
-    const scoreOffset =
-        votes.filter((d) => d.commentID === props.id && d.voteType === "upvote")
-            .length -
-        votes.filter(
-            (d) => d.commentID === props.id && d.voteType === "downvote"
-        ).length;
-    const userVote = votes.find(
-        (d) => d.commentID === props.id && d.username === username
-    )?.voteType;
+    const { scoreOffset, userVote, updateVote } = useVote(props.id);
 
     function addReply() {
         const atPerson = `@${props.user.username}`;
@@ -95,43 +87,6 @@ export default function Comment(props: Unpacked<typeof data.comments>) {
             return [...prev];
         });
         setIsEditing(false);
-    }
-
-    function updateVote(c: "upvote" | "downvote") {
-        if (!username) {
-            return;
-        }
-        if (!userVote) {
-            setVotes((prev) => [
-                ...prev,
-                {
-                    voteID: Math.random(),
-                    username,
-                    commentID: props.id,
-                    voteType: c,
-                },
-            ]);
-            return;
-        }
-        if (userVote === c) {
-            setVotes((prev) => [
-                ...prev.filter(
-                    (d) =>
-                        !(d.commentID === props.id && d.username === username)
-                ),
-            ]);
-            return;
-        }
-        setVotes((prev) => {
-            const updated = prev.map((d) => {
-                if (d.commentID === props.id && d.username === username) {
-                    d.voteType = c;
-                }
-                return d;
-            });
-            return [...updated];
-        });
-        return;
     }
 
     useEffect(() => {
