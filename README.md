@@ -2,25 +2,35 @@
 
 This is a solution to the [Interactive comments section challenge on Frontend Mentor](https://www.frontendmentor.io/challenges/interactive-comments-section-iG1RugEG9 "https://www.frontendmentor.io/challenges/interactive-comments-section-iG1RugEG9").
 
+## Table of contents
+
+-   [Overview](#overview)
+-   [My process](#my-process)
+    -   [Built with](#built-with)
+    -   [What I learned](#what-i-learned)
+        -   [State management](#state-management)
+        -   [Vote](#vote)
+-   [Resources](#resources)
+
 ## Overview
 
 Users should be able to:
 
-- View the optimal layout for the app depending on their device's screen size
+-   View the optimal layout for the app depending on their device's screen size
 
-- See hover states for all interactive elements on the page
+-   See hover states for all interactive elements on the page
 
-- Create, Read, Update, and Delete comments and replies
+-   Create, Read, Update, and Delete comments and replies
 
-- Upvote and downvote comments
+-   Upvote and downvote comments
 
-- If you're building a purely front-end project, use `localStorage` to save the current state in the browser that persists when the browser is refreshed.
+-   If you're building a purely front-end project, use `localStorage` to save the current state in the browser that persists when the browser is refreshed.
 
 Links:
 
-- GitHub Repo: <https://github.com/xup60521/react-interactive-comment-section>
+-   GitHub Repo: <https://github.com/xup60521/react-interactive-comment-section>
 
-- Live website: <https://xup60521.github.io/react-interactive-comment-section/>
+-   Live website: <https://xup60521.github.io/react-interactive-comment-section/>
 
 ```bash
 # install dependencies
@@ -33,17 +43,17 @@ pnpm run dev
 
 ### Built with
 
-- React (powered by Vite)
+-   React (powered by Vite)
 
-- TailwindCSS
+-   TailwindCSS
 
-- Jotai (state management)
+-   Jotai (state management)
 
-- react-random-avatar
+-   react-random-avatar
 
-- shadcn/ui
+-   shadcn/ui
 
-### My process
+### What I learned
 
 #### State management
 
@@ -61,7 +71,7 @@ export const commentsAtom = atomWithStorage<typeof data.comments>(
 );
 
 // usage
-const [comments, setComments] = useAtom(commentsAtom)
+const [comments, setComments] = useAtom(commentsAtom);
 ```
 
 #### Avatar
@@ -131,11 +141,11 @@ In order to store vote data, I used Jotai to manage state and custom hook to enc
 
 ```tsx
 // state.ts
-const VOTESTORAGE_KEY = "VotesAtom storage key"
-export const votesAtom = atomWithStorage<Vote[]>(VOTESTORAGE_KEY, [])
+const VOTESTORAGE_KEY = "VotesAtom storage key";
+export const votesAtom = atomWithStorage<Vote[]>(VOTESTORAGE_KEY, []);
 
 // usage
-const [votes, setVotes] = useAtom(votesAtom)
+const [votes, setVotes] = useAtom(votesAtom);
 ```
 
 Though Jotai is aimed to manage global state, we don’t call its value directly. Instead, we write our data access layer and logic in a custom hook.
@@ -161,7 +171,7 @@ export function useVote(id: number) {
         if (!username) {
             return;
         }
-      // user hasn't vote on a comment
+        // user hasn't vote on a comment
         if (!userVote) {
             setVotes((prev) => [
                 ...prev,
@@ -174,8 +184,8 @@ export function useVote(id: number) {
             ]);
             return;
         }
-      // If a user has already upvote or downvote on a comment,
-      // click again will cancel the vote.
+        // If a user has already upvote or downvote on a comment,
+        // click again will cancel the vote.
         if (userVote === c) {
             setVotes((prev) => [
                 ...prev.filter(
@@ -184,7 +194,7 @@ export function useVote(id: number) {
             ]);
             return;
         }
-      // Otherwise, update the voteType.
+        // Otherwise, update the voteType.
         setVotes((prev) => {
             const updated = prev.map((d) => {
                 if (d.commentID === id && d.username === username) {
@@ -207,7 +217,6 @@ export function useVote(id: number) {
         updateVote,
     };
 }
-
 ```
 
 In `<Comment />` and `<Reply />` component, if I want to create an upvote button, just call this hook.
@@ -223,10 +232,10 @@ return (
 
 ## Resources
 
-- TailwindCSS Docs - <https://tailwindcss.com/docs>
+-   TailwindCSS Docs - <https://tailwindcss.com/docs>
 
-- Google font - <https://fonts.google.com>
+-   Google font - <https://fonts.google.com>
 
-- Jotai docs - <https://jotai.org/docs/utilities/storage#atomwithstorage>
+-   Jotai docs - <https://jotai.org/docs/utilities/storage#atomwithstorage>
 
-- shadcn/ui - <https://ui.shadcn.com/docs>
+-   shadcn/ui - <https://ui.shadcn.com/docs>
